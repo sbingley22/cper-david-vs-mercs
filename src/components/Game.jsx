@@ -25,9 +25,11 @@ const Game = () => {
     }
   }, [glitchActive])
 
+  const mobileDevice = window.innerWidth <= 768
+
   return (
     <>
-      <Canvas shadows camera={{position: [-2,1,-4]}} onClick={handleClick}>
+      <Canvas shadows camera={{position: mobileDevice ? [-3,3,-6] : [-2,1,-4]}} onClick={handleClick} dpr={mobileDevice ? 0.2 : 2}>
         <OrbitControls />
 
         <Environment preset="night" environmentIntensity={0.9} />
