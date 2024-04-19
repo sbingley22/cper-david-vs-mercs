@@ -22,7 +22,7 @@ const Game = () => {
         </Center>
       </Canvas>
       <div className="hud">
-        <p>SANDEVISTAN: {sandevistan}</p>
+        <p style={{color: sandevistan < 1 ? 'red' : '#BBFFBB'}}>SANDEVISTAN: {(sandevistan*100).toFixed(0)}</p>
       </div>
     </>
   )

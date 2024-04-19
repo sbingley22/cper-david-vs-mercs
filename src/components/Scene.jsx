@@ -1,9 +1,9 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react/no-unknown-property */
 import { useAnimations, useGLTF } from "@react-three/drei"
 import gltfFile from "../assets/martinezVsMercs.glb?url"
 import { useEffect, useRef, useState } from "react"
-import { useFrame, useThree } from "@react-three/fiber"
-import * as THREE from 'three'
+import { useFrame } from "@react-three/fiber"
 
 
 const Scene = ({ sandevistan, setSandevistan }) => {
@@ -44,7 +44,7 @@ const Scene = ({ sandevistan, setSandevistan }) => {
           setM3Anim("AimM3")
         }
 
-        hitTimer.current = 2
+        hitTimer.current = 0.9
       }
     }
 
@@ -53,9 +53,10 @@ const Scene = ({ sandevistan, setSandevistan }) => {
       if (hitTimer.current < 0) hitTimer.current = 0
 
       const mercMaterial = nodes["merc"+activeMerc.current].material
-      const colorChange = hitTimer.current * 6
-      mercMaterial.color.b = 1 - colorChange
-      mercMaterial.color.g = 1 - colorChange
+      const colorChange = hitTimer.current * 4
+      mercMaterial.color.r = 1 + colorChange
+      mercMaterial.color.b = 1 + colorChange
+      mercMaterial.color.g = 1 + colorChange
     }
   })
 
@@ -88,9 +89,9 @@ const Scene = ({ sandevistan, setSandevistan }) => {
 
   // M2 Animations
   useEffect(()=>{
-    actions[m2Anim].reset().fadeIn(0.5).play()
+    actions[m2Anim].reset().fadeIn(0.3).play()
 
-    return () => actions[m2Anim].fadeOut(0.5)
+    return () => actions[m2Anim].fadeOut(0.3)
   },[actions, m2Anim])
 
   // M3 Animations
@@ -100,9 +101,16 @@ const Scene = ({ sandevistan, setSandevistan }) => {
     return () => actions[m3Anim].fadeOut(0.5)
   },[actions, m3Anim])
 
+  // Take Damage
+  useEffect(()=>{
+    if (sandevistan <= 0.2) return
+    if (dAnim.includes('DamageFrom')) setSandevistan(sandevistan - 0.2)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[dAnim])
+
   // Mixer
   useEffect(()=>{
-    const singleAnims = ['StartD', 'StartM1', 'StartM2', 'StartM3', 'AimAtM1', 'AimAtM2', 'AimAtM3', 'AimM1', 'AimM2', 'AimM3', 'DamageFromM1', 'DamageFromM2', 'DamageFromM3']
+    const singleAnims = ['StartD', 'StartM1', 'StartM2', 'StartM3', 'AimAtM1', 'AimAtM2', 'AimAtM3', 'AimM1', 'AimM2', 'AimM3', 'DamageFromM1', 'DamageFromM2', 'DamageFromM3', 'AttackAtM1', 'AttackM1', 'AttackAtM2', 'AttackM2', 'AttackAtM3', 'AttackM3', 'DamageM1', 'DamageM2', 'DamageM3']
     singleAnims.forEach( a => {
       actions[a].repetitions = 1
       actions[a].clampWhenFinished = true
@@ -116,6 +124,9 @@ const Scene = ({ sandevistan, setSandevistan }) => {
       else if (dAnim== 'DamageFromM1') setDAnim('IdleD')
       else if (dAnim== 'DamageFromM2') setDAnim('IdleD')
       else if (dAnim== 'DamageFromM3') setDAnim('IdleD')
+      else if (dAnim== 'AttackAtM1') setDAnim('IdleD')
+      else if (dAnim== 'AttackAtM2') setDAnim('IdleD')
+      else if (dAnim== 'AttackAtM3') setDAnim('IdleD')
       if (m1Anim== 'StartM1') setM1Anim('IdleM1')
       else if (m1Anim== 'AimM1') setM1Anim('AttackM1')
       else if (m1Anim== 'AttackM1') setM1Anim('IdleM1')
@@ -136,29 +147,24 @@ const Scene = ({ sandevistan, setSandevistan }) => {
 
   }, [actions, mixer, dAnim, m1Anim, m2Anim, m3Anim])
 
-  const raycaster = new THREE.Raycaster(); // Create a new Raycaster instance
-
-  const { camera } = useThree()
   const handleClick = (e) => {
-    // Get mouse position
-    const mouse = {
-      x: (e.clientX / window.innerWidth) * 2 - 1,
-      y: -(e.clientY / window.innerHeight) * 2 + 1,
-    };
+    //if (e.object) console.log(e.object.name)
+    if (hitTimer.current > 0) {
+      hitTimer.current = 0
+      setSandevistan(sandevistan + 0.4)
 
-    // Set raycaster properties
-    raycaster.setFromCamera(mouse, camera); // Replace `camera` with your camera reference
-
-    // Perform raycasting
-    const intersects = raycaster.intersectObjects(scene.children, true);
-
-    // Check for intersections
-    if (intersects.length > 0) {
-      const clickedObject = intersects[0].object;
-      console.log('Clicked Object:', clickedObject.name);
-      // Do something with the clicked object
+      if (activeMerc.current == 1) {
+        setDAnim("AttackAtM1")
+        setM1Anim("DamageM1")
+      } else if (activeMerc.current == 2) {
+        setDAnim("AttackAtM2")
+        setM2Anim("DamageM2")
+      } else if (activeMerc.current == 3) {
+        setDAnim("AttackAtM3")
+        setM3Anim("DamageM3")
+      }
     }
-  };
+  }
 
   return (
     <>
@@ -166,6 +172,7 @@ const Scene = ({ sandevistan, setSandevistan }) => {
         object={scene}
         dispose={null}
         onClick={handleClick}
+        onPointerMissed={handleClick}
       />
     </>
   )
