@@ -5,3 +5,4 @@ A react three animation quick time event where the user plays a david martinez f
 Click a merc when they flash red to attack them. Enough attacks without taking damage will charge up the sandevistan.
 
 Live Link:
+https://sbingley22.github.io/cper-david-vs-mercs/
